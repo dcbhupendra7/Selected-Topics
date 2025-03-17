@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Neuro-Evolution of Flappy Bird</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+    <script src="classes.js"></script>
+    <script src="sketch.js"></script>
+    <style>
+      body {
+        margin: 0;
+        padding: 20px;
+        background-color: #2f2f2f;
+        color: #fff;
+        font-family: Arial, sans-serif;
+        min-height: 100vh;
+      }
+      #main-container {
+        max-width: 800px;
+        margin: 0 auto;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 20px;
+      }
+      /* Control panel: inputs on left; buttons on right */
+      #control-panel {
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background-color: #1e1e1e;
+        padding: 20px;
+        border-radius: 10px;
+      }
+      /* Left side: mutation rate and population inputs */
+      #control-inputs {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .control-group {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      label {
+        min-width: 120px;
+        font-weight: bold;
+      }
+      input[type="number"] {
+        width: 80px;
+        padding: 5px;
+        background-color: #333;
+        border: 1px solid #444;
+        color: white;
+        border-radius: 5px;
+      }
+      /* Right side: control buttons */
+      #control-buttons {
+        display: flex;
+        gap: 10px;
+      }
+      button {
+        padding: 8px 16px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-weight: bold;
+        min-width: 80px;
+      }
+      button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+      .start-button {
+        background-color: #4caf50;
+        color: white;
+      }
+      .pause-button {
+        background-color: #ff6347;
+        color: white;
+      }
+      .resume-button {
+        background-color: #32cd32;
+        color: white;
+      }
+      .reset-button {
+        background-color: #2196f3;
+        color: white;
+      }
+      /* Stats panel: all five stats together in one row */
+      #stats-panel {
+        width: 100%;
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        background-color: #333;
+        padding: 10px;
+        border-radius: 8px;
+      }
+      .stat-card {
+        text-align: center;
+        color: #fff;
+      }
+      .stat-title {
+        font-size: 14px;
+        color: #aaa;
+        margin-bottom: 3px;
+      }
+      .stat-value {
+        font-size: 18px;
+        font-weight: bold;
+      }
+      /* Canvas container for the Flappy Bird simulation */
+      #canvas-container {
+        width: 640px;
+        height: 480px;
+        background-color: #333;
+        border-radius: 8px;
+        overflow: hidden;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+      canvas {
+        display: block;
+      }
+      /* Best score graph (smaller height) */
+      #graph {
+        width: 100%;
+        height: 80px;
+        background-color: #1e1e1e;
+        border-radius: 8px;
+        position: relative;
+        overflow: hidden;
+      }
+      .bar {
+        position: absolute;
+        bottom: 0;
+        background-color: #4caf50;
+        width: 4px;
+        margin-right: 1px;
+        transition: height 0.3s ease;
+      }
+      #instructions {
+        color: #aaa;
+        text-align: center;
+        max-width: 600px;
+        line-height: 1.5;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="main-container">
+      <div id="control-panel">
+        <div id="control-inputs">
+          <div class="control-group">
+            <label for="mutationRate">Mutation Rate:</label>
+            <input
+              type="number"
+              id="mutationRate"
+              value="0.1"
+              step="0.01"
+              min="0"
+              max="0.5"
+            />
+          </div>
+          <div class="control-group">
+            <label for="popSize">Population Size:</label>
+            <input
+              type="number"
+              id="popSize"
+              value="50"
+              step="1"
+              min="10"
+              max="200"
+            />
+          </div>
+        </div>
+        <div id="control-buttons">
+          <button id="startButton" class="start-button">Start</button>
+          <button id="togglePause" class="pause-button" disabled>Pause</button>
+          <button id="resetSimulation" class="reset-button">Reset</button>
+        </div>
+      </div>
+
+      <!-- All stats grouped together in one horizontal row -->
+      <div id="stats-panel">
+        <div class="stat-card">
+          <div class="stat-title">Generation</div>
+          <div id="generation" class="stat-value">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-title">Birds Alive</div>
+          <div id="birdsAlive" class="stat-value">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-title">Current Best Score</div>
+          <div id="bestScore" class="stat-value">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-title">Previous Best Score</div>
+          <div id="prevBestScore" class="stat-value">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-title">Previous Avg Score</div>
+          <div id="prevAvgScore" class="stat-value">0.0</div>
+        </div>
+      </div>
+
+      <div id="canvas-container"></div>
+      <div id="graph"></div>
+
+      <div id="instructions">
+        <p>
+          Adjust the Mutation Rate to control how much the birds' neural
+          networks change between generations. Higher values create more
+          variation but may be less stable.
+        </p>
+        <p>
+          Change the Population Size to set how many birds appear in each
+          generation. Larger populations provide more diversity but run slower.
+        </p>
+      </div>
+    </div>
+  </body>
+</html>
