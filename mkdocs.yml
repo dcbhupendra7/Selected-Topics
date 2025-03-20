@@ -1,0 +1,10 @@
+site_name: "Flappy Bird Neuro-Evolution"
+
+# The folder containing your .md files (defaults to "docs" if omitted)
+docs_dir: "docs"
+
+nav:
+  - Home: index.md
+  - Introduction: introduction.md
+  - How It Works: how_it_works.md
+  - FAQ: faq.md
